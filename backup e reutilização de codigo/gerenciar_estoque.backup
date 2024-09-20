@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento</title>
+    <link rel="stylesheet" href="gerenciar_estoque.css">
+</head>
+<body>
+    <h1>Gerenciar Estoque</h1>
+    
+    <!-- Formulário para movimentação -->
+    <form id="meu_gerenciamento" method="post" action="movimentacao.php">
+        
+        <div>
+            <label for="codigoItem">Código do Item:</label>
+            <input type="number" id="codigoItem" name="codigoItem" required>
+            <button type="button" onclick="exibirDetalhes()">Exibir</button>
+        </div>
+        
+        <div id="detalhesItemContainer"></div>
+        <div id="messageContainer"></div>
+
+        <div>
+            <label for="tipoMovimentacao">Tipo de Movimentação:</label>
+            <select name="tipoMovimentacao" id="tipoMovimentacao" required>
+                <!--<option value="CADASTRO">Cadastro</option>-->
+                <option value="ENTRADA">Entrada</option>
+                <option value="SAÍDA">Saída</option>
+            
+            </select>
+        </div>
+
+        <div>
+            <label for="quantidade_item">Quantidade:</label>
+            <input type="number" id="quantidade_item" name="quantidade_item" required>
+        </div>
+
+        <div>
+            <label for="funcionarioResponsavel">Solicitado por</label>
+            <input type="text" id="funcionarioResponsavel" name="funcionarioResponsavel" required>
+        </div>
+
+        <button type="submit">Registrar</button>
+        <button type="button" onclick="irparamovimentacao_item()">Movimentação</button>
+        <button type="button" onclick="retornarMenuPrincipal()">Menu Principal</button>
+        <button type="button" onclick="sairdosistema()">Sair</button>
+
+
+    </form>
+
+    <script>
+
+    function irparamovimentacao_item() {
+        window.location.href = 'mostrar_movimentacao.php';   
+    }
+
+    function retornarMenuPrincipal() {
+        window.location.href = 'menu.php';   
+    }
+    function sairdosistema() {
+        window.location.href = 'index.html';
+    }
+
+  
+
+ 
+
+
+    function exibirDetalhes() {
+        var codigoItem = document.getElementById('codigoItem').value;
+        var xhr = new XMLHttpRequest();
+
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200) {
+                    // O servidor respondeu com sucesso, exibe a resposta na página
+                    document.getElementById('detalhesItemContainer').innerHTML = xhr.responseText;
+                } else {
+                    // O servidor respondeu com um erro
+                    console.error('Erro ao enviar a requisição. Código de status:', xhr.status);
+                }
+            }
+        };
+
+        // Configura a requisição
+        xhr.open('POST', 'detalhes_item.php', true);
+        xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+        xhr.send('codigoItem=' + codigoItem);
+    }
+    </script>
+</body>
+</html>

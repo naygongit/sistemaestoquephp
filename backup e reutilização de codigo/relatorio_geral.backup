@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios de Estoque</title>
+    <link rel="stylesheet" href="css_relatorio_geral.css">
+</head>
+<body>
+
+<h1>Relatórios de Estoque</h1>
+
+<div>
+    <button type="button" onclick="retornarMenuPrincipal()">Sair</button>
+</div>
+
+<!-- Relatório de Itens Específicos -->
+<h2>Relatório de Item Específico</h2>
+<form method="post" action="">
+    <label for="itemCodigo">Código do Item:</label>
+    <input type="number" id="itemCodigo" name="itemCodigo" required>
+    <button type="submit">Gerar Relatório</button>
+</form>
+
+<?php
+// Inclua o arquivo de conexão
+include 'conexao.php';
+
+function relatorioItemEspecifico($codigoItem,$conn) {
+    // Consulta SQL para obter o total de entrada e saída do item
+    $sqlTotalEntradaSaida = "SELECT 
+        item.nome AS nome_item,
+        SUM(CASE WHEN tipoMovimentacao = 'ENTRADA' THEN quantidade_item ELSE 0 END) AS total_entrada,
+        SUM(CASE WHEN tipoMovimentacao = 'SAÍDA' THEN quantidade_item ELSE 0 END) AS total_saida
+        FROM movimentacao 
+        LEFT JOIN item ON movimentacao.codigoItem = item.id
+        WHERE codigoItem = $codigoItem";
+
+    $resultTotalEntradaSaida = $conn->query($sqlTotalEntradaSaida);
+
+    if ($resultTotalEntradaSaida && $resultTotalEntradaSaida->num_rows > 0) {
+        $rowTotal = $resultTotalEntradaSaida->fetch_assoc();
+
+        
+
+        // Exibe o total de entrada e saída em formato de tabela
+       //echo '<h2>Relatório de Item Específico</h2>';//
+        echo '<table border="1">';
+        echo '<tr><th>ID do Item</th><th>Nome do Item</th><th>Total de Entrada</th><th>Total de Saída</th></tr>';
+        echo '<tr>';
+        echo '<td>' . $codigoItem . '</td>';
+        echo '<td>' . $rowTotal['nome_item'] . '</td>';
+        echo '<td>' . $rowTotal['total_entrada'] . '</td>';
+        echo '<td>' . $rowTotal['total_saida'] . '</td>';
+        echo '</tr>';
+        echo '</table>';
+ // Adiciona um script JavaScript para imprimir a tabela
+        echo '<script>
+    function imprimirTabela() {
+     var tabela = document.querySelector("table");
+     var novaJanela = window.open("", "_blank");
+     novaJanela.document.write("<html><head><title>Relatório de Item</title>");
+     novaJanela.document.write("<style>table { border-collapse: collapse; width: 100%; } th, td { border: 1px solid #ddd; padding: 8px; text-align: left; } th { background-color: #4CAF50; color: white; }</style>");
+     novaJanela.document.write("</head><body><h2>Relatório de Item Específico</h2>");
+     novaJanela.document.write(tabela.outerHTML);
+     novaJanela.document.write("</body></html>");
+     novaJanela.document.close();
+     novaJanela.print();
+ }
+    </script>';
+        } else {
+        echo '<div class="alert alert-danger" role="alert">Erro ao obter o relatório do item.</div>';
+}
+    }
+
+
+    function relatorioSolicitacaoPorFuncionario($conn) {
+        // Consulta SQL para obter o relatório de solicitação por funcionário
+        $sqlRelatorioSolicitacao = "SELECT funcionarioResponsavel, COUNT(*) AS total_solicitacoes
+                                    FROM movimentacao
+                                    GROUP BY funcionarioResponsavel
+                                    ORDER BY total_solicitacoes DESC";
+        
+        $resultRelatorioSolicitacao = $conn->query($sqlRelatorioSolicitacao);
+        
+        if ($resultRelatorioSolicitacao && $resultRelatorioSolicitacao->num_rows > 0) {
+            echo '<div>';
+            echo '<h2>Relatório de Solicitação por Funcionário';
+            echo '<button type="button" onclick="showTable(\'tabelaSolicitacao\')">Exibir Tabela</button>';
+            echo '<button type="button" onclick="hideTable(\'tabelaSolicitacao\')">Ocultar Tabela</button>';
+            echo '</h2>';
+            echo '<table id="tabelaSolicitacao" border="1">';
+            echo '<tr><th>Funcionário</th><th>Total de Solicitações</th></tr>';
+            
+            while ($row = $resultRelatorioSolicitacao->fetch_assoc()) {
+                echo '<tr>';
+                echo '<td>' . $row['funcionarioResponsavel'] . '</td>';
+                echo '<td>' . $row['total_solicitacoes'] . '</td>';
+                echo '</tr>';
+            }
+        
+                echo '</table>';
+                echo '</div>';
+    } else {
+                echo '<div class="alert alert-danger" role="alert">Nenhum dado encontrado para o relatório de solicitação por funcionário.</div>';
+           }
+    }
+    
+    // Adicione este script no final da sua página para controlar a visibilidade da tabela
+    echo '<script>
+            function showTable(tableId) {
+                var table = document.getElementById(tableId);
+                table.style.display = "table";
+            }
+            
+            function hideTable(tableId) {
+                var table = document.getElementById(tableId);
+                table.style.display = "none";
+            }
+          </script>';
+    
+        
+        
+
+function relatorioPorDataSolicitacao($conn) {
+    // Consulta SQL para obter o relatório por data de solicitação com o tipo de solicitação
+    $sqlRelatorioData = "SELECT DATE_FORMAT(dataMovimentacao, '%d/%m/%Y') AS data_solicitacao, tipoMovimentacao, COUNT(*) AS total_solicitacoes
+                        FROM movimentacao
+                        GROUP BY DATE_FORMAT(dataMovimentacao, '%d/%m/%Y'), tipoMovimentacao
+                        ORDER BY data_solicitacao DESC";
+    
+    $resultRelatorioData = $conn->query($sqlRelatorioData);
+    
+    if ($resultRelatorioData && $resultRelatorioData->num_rows > 0) {
+        echo '<h2>Relatório por Data de Solicitação';
+        echo '<button type="button" onclick="showTable(\'tabelaSolicitacao2\')">Exibir Tabela</button>';
+        echo '<button type="button" onclick="hideTable(\'tabelaSolicitacao2\')">Ocultar Tabela</button>';
+        echo '</h2>';
+        echo '<table id="tabelaSolicitacao2" border="1">';
+        echo '<tr><th>Data de Solicitação</th><th>Tipo de Solicitação</th><th>Total de Solicitações</th></tr>';
+        
+        while ($row = $resultRelatorioData->fetch_assoc()) {
+            echo '<tr>';
+            echo '<td>' . $row['data_solicitacao'] . '</td>';
+            echo '<td>' . $row['tipoMovimentacao'] . '</td>';
+            echo '<td>' . $row['total_solicitacoes'] . '</td>';
+            echo '</tr>';
+        }
+    
+        echo '</table>';
+    } else {
+        echo '<div class="alert alert-danger" role="alert">Nenhum dado encontrado para o relatório por data de solicitação.</div>';
+    }
+}
+echo '<script>
+        function showTable(tableId) {
+        var table = document.getElementById(tableId);
+        table.style.display = "table";
+    }
+
+        function hideTable(tableId) {
+        var table = document.getElementById(tableId);
+        table.style.display = "none";
+    }
+      </script>';
+
+      function relatorioItensMaisSolicitadosPorTipo($conn, $quantidadeLinhas = 5) {
+        // Consulta SQL para obter os itens mais solicitados por tipo
+        $sqlItensMaisSolicitados = "SELECT item.nome, item.tipo, COUNT(*) AS total_solicitacoes
+                                    FROM movimentacao
+                                    LEFT JOIN item ON movimentacao.codigoItem = item.id
+                                    GROUP BY item.nome, item.tipo
+                                    ORDER BY total_solicitacoes DESC
+                                    LIMIT $quantidadeLinhas";
+    
+        $resultItensMaisSolicitados = $conn->query($sqlItensMaisSolicitados);
+    
+        if ($resultItensMaisSolicitados && $resultItensMaisSolicitados->num_rows > 0) {
+            echo '<h2>Relatório de Itens mais Solicitados por Tipo</h2>';
+            echo '<button type="button" onclick="showTable(\'tabelaSolicitacao3\')">Exibir Tabela</button>';
+            echo '<button type="button" onclick="hideTable(\'tabelaSolicitacao3\')">Ocultar Tabela</button>';
+            echo '</h2>';
+            echo '<table id="tabelaSolicitacao3" border="1">';
+            echo '<tr><th>Nome do Item</th><th>Tipo do Item</th><th>Total de Solicitações</th></tr>';
+    
+            while ($row = $resultItensMaisSolicitados->fetch_assoc()) {
+                echo '<tr>';
+                echo '<td>' . $row['nome'] . '</td>';
+                echo '<td>' . $row['tipo'] . '</td>';
+                echo '<td>' . $row['total_solicitacoes'] . '</td>';
+                echo '</tr>';
+            }
+    
+            echo '</table>';
+        } else {
+            echo '<div class="alert alert-danger" role="alert">Nenhum dado encontrado para o relatório de itens mais solicitados.</div>';
+        }
+    }
+    echo '<script>
+    function showTable(tableId) {
+    var table = document.getElementById(tableId);
+    table.style.display = "table";
+    }
+
+    function hideTable(tableId) {
+    var table = document.getElementById(tableId);
+    table.style.display = "none";
+    }
+    </script>';
+
+
+function relatorioQuantidadeAtualEstoque($conn, $quantidadeLinhas = 5) {
+    // Consulta SQL para obter o relatório de quantidade atual do estoque
+    $sqlRelatorioEstoque = "SELECT item.nome, item.quantidade
+                            FROM item
+                            LEFT JOIN (
+                                SELECT codigoItem, MAX(dataMovimentacao) AS ultimaMovimentacao
+                                FROM movimentacao
+                                GROUP BY codigoItem
+                            ) AS ultimaMovimentacao ON item.id = ultimaMovimentacao.codigoItem
+                            ORDER BY ultimaMovimentacao.ultimaMovimentacao DESC";
+
+    $resultRelatorioEstoque = $conn->query($sqlRelatorioEstoque);
+
+    if ($resultRelatorioEstoque && $resultRelatorioEstoque->num_rows > 0) {
+        echo '<h2>Relatório de Quantidade Atual do Estoque por Movimentacao';
+        echo '<button type="button" onclick="showTable(\'tabelaSolicitacao4\')">Exibir Tabela</button>';
+        echo '<button type="button" onclick="hideTable(\'tabelaSolicitacao4\')">Ocultar Tabela</button>';
+        echo '</h2>';
+        echo '<table id="tabelaSolicitacao4" border="1">';
+        echo '<tr><th>Nome do Item</th><th>Quantidade Atual</th></tr>';
+
+        while ($row = $resultRelatorioEstoque->fetch_assoc()) {
+            echo '<tr>';
+            echo '<td>' . $row['nome'] . '</td>';
+            echo '<td>' . $row['quantidade'] . '</td>';
+            echo '</tr>';
+        }
+
+        echo '</table>';
+    } else {
+        echo '<div class="alert alert-danger" role="alert">Nenhum dado encontrado para o relatório de quantidade atual do estoque.</div>';
+    }
+}
+        echo '<script>
+        function showTable(tableId) {
+        var table = document.getElementById(tableId);
+        table.style.display = "table";
+        }
+
+        function hideTable(tableId) {
+        var table = document.getElementById(tableId);
+        table.style.display = "none";
+        }
+      </script>';
+
+function relatorioItensMaisSolicitados($conn, $quantidadeLinhas = 5) {
+    // Consulta SQL para obter os itens mais solicitados
+    $sqlItensMaisSolicitados = "SELECT item.nome, COUNT(*) AS total_solicitacoes
+                                FROM movimentacao
+                                LEFT JOIN item ON movimentacao.codigoItem = item.id
+                                GROUP BY item.nome
+                                ORDER BY total_solicitacoes DESC
+                                LIMIT $quantidadeLinhas";
+
+    $resultItensMaisSolicitados = $conn->query($sqlItensMaisSolicitados);
+
+    if ($resultItensMaisSolicitados && $resultItensMaisSolicitados->num_rows > 0) {
+        echo '<h2>Relatório de Itens mais Solicitados</h2>';
+        echo '<button type="button" onclick="showTable(\'tabelaSolicitacao5\')">Exibir Tabela</button>';
+        echo '<button type="button" onclick="hideTable(\'tabelaSolicitacao5\')">Ocultar Tabela</button>';
+        echo '</h2>';
+        echo '<table id="tabelaSolicitacao5" border="1">';
+        echo '<tr><th>Nome do Item</th><th>Total de Solicitações</th></tr>';
+
+        while ($row = $resultItensMaisSolicitados->fetch_assoc()) {
+            echo '<tr>';
+            echo '<td>' . $row['nome'] . '</td>';
+            echo '<td>' . $row['total_solicitacoes'] . '</td>';
+            echo '</tr>';
+        }
+
+        echo '</table>';
+    } else {
+        echo '<div class="alert alert-danger" role="alert">Nenhum dado encontrado para o relatório de itens mais solicitados.</div>';
+    }
+}
+    echo '<script>
+    function showTable(tableId) {
+    var table = document.getElementById(tableId);
+    table.style.display = "table";
+    }
+
+    function hideTable(tableId) {
+    var table = document.getElementById(tableId);
+    table.style.display = "none";
+    }
+    </script>';
+
+
+
+
+// Verifique se algum formulário foi enviado
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Processar a pesquisa por item específico
+    if (isset($_POST['itemCodigo'])) {
+        relatorioItemEspecifico($_POST['itemCodigo'], $conn);
+    }
+}
+
+function relatorioItenscadastradosGerenciados($conn) {
+    // Consulta SQL para obter os itens gerenciados
+    $sqlItensGerenciados = "SELECT DISTINCT item.nome, item.tipo
+                            FROM item
+                            INNER JOIN movimentacao ON item.id = movimentacao.codigoItem";
+    
+    $resultItensGerenciados = $conn->query($sqlItensGerenciados);
+
+    if ($resultItensGerenciados && $resultItensGerenciados->num_rows > 0) {
+        echo '<h2>Relatório de Itens que foram Cadastrados Gerenciados</h2>';
+        echo '<button type="button" onclick="showTable(\'tabelaSolicitacao6\')">Exibir Tabela</button>';
+        echo '<button type="button" onclick="hideTable(\'tabelaSolicitacao6\')">Ocultar Tabela</button>';
+        echo '</h2>';
+        echo '<table id="tabelaSolicitacao6" border="1">';
+        echo '<tr><th>Nome do Item</th><th>Tipo do Item</th></tr>';
+
+        while ($row = $resultItensGerenciados->fetch_assoc()) {
+            echo '<tr>';
+            echo '<td>' . $row['nome'] . '</td>';
+            echo '<td>' . $row['tipo'] . '</td>';
+            echo '</tr>';
+        }
+
+        echo '</table>';
+    } else {
+        echo '<div class="alert alert-danger" role="alert">Nenhum dado encontrado para o relatório de itens gerenciados.</div>';
+    }
+}
+echo '<script>
+function showTable(tableId) {
+var table = document.getElementById(tableId);
+table.style.display = "table";
+}
+
+function hideTable(tableId) {
+var table = document.getElementById(tableId);
+table.style.display = "none";
+}
+</script>';
+
+//------------------------------------------------------------------------------------------------------
+
+//if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+//    if (isset($_POST['itemCodigo'])) {
+//        $codigoItem = $_POST['itemCodigo'];
+        
+
+
+        // Função para gerar o relatório de ciclo de vida do item
+        /*function relatorioCicloDeVida($conn, $codigoItem) {
+            $sqlCicloVida = "SELECT 
+                movimentacao.id AS ID,
+                item.nome AS NOME,
+                'CADASTRO' AS TIPO_SOLICITACAO,
+                0 AS QUANTIDADE_MOVIMENTADA,
+                item.quantidade AS QUANTIDADE_ESTOQUE,
+                DATE_FORMAT(movimentacao.dataMovimentacao, '%d-%m') AS DATA
+            FROM movimentacao
+            LEFT JOIN item ON movimentacao.codigoItem = item.id
+            WHERE movimentacao.codigoItem = $codigoItem
+            
+            UNION
+            
+            SELECT 
+                movimentacao.id AS ID,
+                item.nome AS NOME,
+                movimentacao.tipoMovimentacao AS TIPO_SOLICITACAO,
+                movimentacao.quantidade_item AS QUANTIDADE_MOVIMENTADA,
+                (SELECT SUM(CASE WHEN tipoMovimentacao = 'ENTRADA' THEN quantidade_item ELSE 0 END) -
+                        SUM(CASE WHEN tipoMovimentacao = 'SAÍDA' THEN quantidade_item ELSE 0 END)
+                    FROM movimentacao
+                    WHERE codigoItem = $codigoItem) AS QUANTIDADE_ESTOQUE,
+                DATE_FORMAT(movimentacao.dataMovimentacao, '%d-%m') AS DATA
+            FROM movimentacao
+            LEFT JOIN item ON movimentacao.codigoItem = item.id
+            WHERE movimentacao.codigoItem = $codigoItem
+            ORDER BY DATA";
+
+            $resultCicloVida = $conn->query($sqlCicloVida);
+
+            if ($resultCicloVida && $resultCicloVida->num_rows > 0) {
+                echo '<h2>Relatório de Ciclo de Vida do Item</h2>';
+                echo '<table border="1">';
+                echo '<tr><th>ID</th><th>Nome</th><th>Tipo Solicitação</th><th>Quantidade Movimentada</th><th>Quantidade Estoque</th><th>Data</th></tr>';
+
+                while ($row = $resultCicloVida->fetch_assoc()) {
+                    echo '<tr>';
+                    echo '<td>' . $row['ID'] . '</td>';
+                    echo '<td>' . $row['NOME'] . '</td>';
+                    echo '<td>' . $row['TIPO_SOLICITACAO'] . '</td>';
+                    echo '<td>' . $row['QUANTIDADE_MOVIMENTADA'] . '</td>';
+                    echo '<td>' . $row['QUANTIDADE_ESTOQUE'] . '</td>';
+                    echo '<td>' . $row['DATA'] . '</td>';
+                    echo '</tr>';
+                }
+
+                echo '</table>';
+            } else {
+                echo '<div class="alert alert-danger" role="alert">Nenhum dado encontrado para o relatório de ciclo de vida do item.</div>';
+            }
+        }
+    
+
+
+    }
+
+}
+*/
+
+
+
+
+//-----------------------------------------------------------------------------------------------------
+// Exibir os demais relatórios
+relatorioSolicitacaoPorFuncionario($conn);
+relatorioPorDataSolicitacao($conn);
+relatorioQuantidadeAtualEstoque($conn);
+relatorioItensMaisSolicitados($conn);
+relatorioItensMaisSolicitadosPorTipo($conn);
+relatorioItenscadastradosGerenciados($conn);
+//relatorioCicloDeVida($conn,$codigoItem);
+// Feche a conexão
+$conn->close();
+
+?>
+
+<script>
+function retornarMenuPrincipal() {
+        window.location.href = 'menu.php';
+    }
+</script>
+</body>
+</html>
+    

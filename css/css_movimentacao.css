@@ -1,0 +1,21 @@
+
+
+    button{
+        width:100px;
+        height:auto;
+        background-color: #4CAF50;
+        color: #fff;
+        padding: 15px 30px;
+        font-size: 16px;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+        display: block;
+        box-sizing: border-box;
+        transition: background-color 0.3s;
+        margin: 5px;
+     
+    }
+    a{
+        text-decoration:none;
+    }

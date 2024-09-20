@@ -1,0 +1,154 @@
+<style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        h1 {
+            background-color: #333;
+            color: #fff;
+            padding: 15px;
+            margin: 0;
+        }
+
+        nav {
+            justify-content: center;
+            background-color: #b61914;
+            overflow: hidden;
+        }
+
+        nav a {
+            float: left;
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+        }
+
+        nav a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+
+        div {
+            margin-top: 35px;
+        }
+
+        input {
+            width: 189px;
+            height: 35px;
+        }
+
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            overflow-y: auto;
+            max-height: 400px;
+}
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 9px;
+            text-align: center;
+            background-color:white;
+        }
+
+        th {
+            background-color: #b61914;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+
+        .tdnomeitem {
+            width: 300px;
+        }
+
+        .tdsolicitadopor{
+            width:200px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin-right: 10px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            width: 99px;
+            height: px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+            color:black;
+        }
+
+        input[type="date"] {
+            width: 189px;
+            height: 35px;
+        }
+    </style>
+<?php
+// Conexão com o banco de dados (substitua pelos seus detalhes de conexão)
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "controle_estoque2";
+
+// Cria a conexão
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Verifica a conexão
+if ($conn->connect_error) {
+    die("Conexão falhou: " . $conn->connect_error);
+}
+
+// Consulta SQL para obter todas as movimentações com informações adicionais da tabela inventario
+$sql = "SELECT m.id_movimentacao, m.numero_tombo, i.nome_item, m.tipoMovimentacao, 'ALMOXARIFADO' AS setor_origem, 
+        m.setor_atual, m.setor_destino, m.data_movimentacao 
+        FROM movimentacao_inventario m
+        JOIN inventario i ON m.numero_tombo = i.numero_tombo";
+$result = $conn->query($sql);
+
+// Verifica se houve algum resultado
+if ($result === false) {
+    // Exibe uma mensagem de erro se a consulta falhar
+    echo "Erro na consulta SQL: " . $conn->error;
+} elseif ($result->num_rows > 0) {
+    // Exibe as informações das movimentações em uma tabela
+    echo "<h2>Movimentações de Inventário</h2>";
+    echo "<table border='1'>";
+    echo "<tr><th>Tipo de Movimentacao</th><th>Nº Tombo</th><th>Nome do Item</th><th>Setor Origem</th><th>Setor Atual</th><th>Setor Destino</th><th>Data Movimentação</th></tr>";
+
+    while ($row = $result->fetch_assoc()) {
+        echo "<tr>";
+        echo "<td>" . $row["tipoMovimentacao"] . "</td>";
+        //echo "<td>" . $row["id_movimentacao"] . "</td>";
+        echo "<td>" . $row["numero_tombo"] . "</td>";
+        echo "<td>" . $row["nome_item"] . "</td>";
+        echo "<td>" . $row["setor_origem"] . "</td>";
+        echo "<td>" . $row["setor_atual"] . "</td>";
+        echo "<td>" . $row["setor_destino"] . "</td>";
+        echo "<td>" . $row["data_movimentacao"] . "</td>";
+        // Adicione mais campos conforme necessário
+        echo "</tr>";
+    }
+
+    echo "</table>";
+} else {
+    echo "Nenhuma movimentação encontrada.";
+}
+
+// Fecha a conexão
+$conn->close();
+?>

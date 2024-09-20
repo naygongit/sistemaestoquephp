@@ -1,0 +1,38 @@
+<?php
+include 'conexao.php';
+
+// Obtém o número do tombo fornecido pelo usuário
+$numeroTombo = isset($_POST["numero_Tombo"]) ? trim($_POST["numero_Tombo"]) : null;
+
+// Consulta SQL para buscar informações do inventário com base no número do tombo
+$sql = "SELECT * FROM inventario WHERE numero_tombo = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("s", $numeroTombo);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result->num_rows > 0) {
+    // Exibe as informações do inventário em uma tabela
+    echo "<table border='1'>";
+    echo "<tr><th>Nº do Tombo</th><th>Nome</th><th>Tipo do Item</th><th>Setor Atual</th></tr>";
+
+    while ($row = $result->fetch_assoc()) {
+        echo "<tr>";
+        echo "<td>" . $row["numero_tombo"] . "</td>";
+        echo "<td>" . $row["nome_item"] . "</td>";
+        echo "<td>" . $row["tipo_item"] . "</td>";
+        echo "<td>" . $row["setor"] . "</td>";
+        // Adicione mais campos conforme necessário
+        echo "</tr>";
+    }
+
+    echo "</table>";
+} else {
+    // Mensagem para indicar que o item não foi encontrado
+    echo "Item não encontrado.";
+}
+
+// Fecha a conexão
+$stmt->close();
+$conn->close();
+?>

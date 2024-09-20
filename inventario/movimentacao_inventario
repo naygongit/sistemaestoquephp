@@ -1,0 +1,79 @@
+<?php
+// Conexão com o banco de dados (substitua pelos seus detalhes de conexão)
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "controle_estoque2";
+
+// Cria a conexão
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Verifica a conexão
+if ($conn->connect_error) {
+    die("Conexão falhou: " . $conn->connect_error);
+}
+
+// Verifica se o formulário foi enviado
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Obtém os dados do formulário
+    $numeroTombo = isset($_POST["numero_Tombo"]) ? $_POST["numero_Tombo"] : '';
+    $setorDestino = isset($_POST["setor_destino"]) ? $_POST["setor_destino"] : '';
+    $tipoMovimentacao = isset($_POST["tipoMovimentacao"]) ? $_POST["tipoMovimentacao"] : '';
+    
+    if (empty($numeroTombo) || empty($setorDestino) || empty($tipoMovimentacao)) {
+        echo "Por favor, preencha todos os campos do formulário.";
+    } else {
+        // Consulta SQL para obter informações do inventário com base no número do tombo
+        $sql = "SELECT * FROM inventario WHERE numero_tombo = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $numeroTombo);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            // Obtém os dados do inventário
+            $row = $result->fetch_assoc();
+            $setorOrigem = $row["setor"];
+
+            // Insere os dados na tabela de movimentação
+            $sqlInsert = "INSERT INTO movimentacao_inventario (numero_tombo, setor_origem, setor_atual, setor_destino, tipoMovimentacao, data_movimentacao) VALUES (?, ?, ?, ?, ?, NOW())";
+            $stmtInsert = $conn->prepare($sqlInsert);
+            $stmtInsert->bind_param("sssss", $numeroTombo, $setorOrigem, $setorOrigem, $setorDestino, $tipoMovimentacao);
+
+            // Executa a inserção
+            $stmtInsert->execute();
+
+            // Verifica se houve erros na inserção
+            if ($stmtInsert->error) {
+                echo "Erro ao inserir na tabela movimentacao_inventario: " . $stmtInsert->error;
+            } else {
+                echo "Movimentação registrada com sucesso!";
+            }
+
+            // Atualiza o setor na tabela de inventário
+            $sqlUpdate = "UPDATE inventario SET setor = ? WHERE numero_tombo = ?";
+            $stmtUpdate = $conn->prepare($sqlUpdate);
+            $stmtUpdate->bind_param("ss", $setorDestino, $numeroTombo);
+
+            // Executa a atualização
+            $stmtUpdate->execute();
+
+            // Verifica se houve erros na atualização
+            if ($stmtUpdate->error) {
+                echo "Erro ao atualizar na tabela inventario: " . $stmtUpdate->error;
+            }
+
+        } else {
+            echo "Item não encontrado.";
+        }
+
+        // Fecha as conexões
+        $stmt->close();
+        $stmtInsert->close();
+        $stmtUpdate->close();
+    }
+
+    // Fecha a conexão principal
+    $conn->close();
+}
+?>

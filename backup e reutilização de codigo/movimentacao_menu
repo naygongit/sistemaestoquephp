@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página de Inventário</title>
+    <link rel="stylesheet" href="css_index.css">
+</head>
+<body>
+
+    <h1>Gerenciamento</h1>
+
+    <div>
+        <button onclick="window.location.href='mostrar_movimentacao.php'">Mostrar Movimentação</button>
+        <!--<button onclick="window.location.href='mostrar_inventario.php'">Mostrar Movimentação Iventário</button>-->  
+        <button onclick="window.location.href='menu.php'">Voltar</button>
+    </div>
+
+    <!-- O restante do conteúdo da página vai aqui -->
+
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro Menu</title>
+    <link rel="stylesheet" href="css_index.css">
+</head>
+<body>
+
+    <h1>Cadastro Menu</h1>
+
+    <div>
+        <button onclick="window.location.href='cadastrar_item.php'">Cadastro Item</button>
+        <!--<button onclick="window.location.href='cadastro_inventario_item.php'">Cadastro Item Inventário</button>-->
+        <button onclick="window.location.href='menu.php'">Voltar</button>
+    </div>
+
+    <!-- O restante do conteúdo da página vai aqui -->
+
+</body>
+</html>

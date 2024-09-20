@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Item</title>
+    <link rel="stylesheet" href="css.css">
+</head>
+<body>
+<style>
+    /* Adicione o estilo para formatação do layout conforme necessário */
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    label {
+        display: inline-block;
+        width: 120px; /* Ajuste conforme necessário */
+        margin-right: 10px;
+        text-align: right;
+    }
+
+    select, input {
+        width: 200px; /* Ajuste conforme necessário */
+    }
+
+    button {
+        margin-top: 10px;
+    }
+</style>
+<?php
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Conexão com o banco de dados (substitua pelos seus detalhes de conexão)
+    $servername = "localhost";
+    $username = "root";
+    $password = "";
+    $dbname = "controle_estoque2";
+
+    // Cria a conexão
+    $conn = new mysqli($servername, $username, $password, $dbname);
+
+    // Verifica a conexão
+    if ($conn->connect_error) {
+        die("Conexão falhou: " . $conn->connect_error);
+    }
+
+    // Inicia uma transação
+    $conn->begin_transaction();
+
+    try {
+        // Restante do seu código para obter o próximo código e verificação de duplicidade
+
+        // Verifica se os campos obrigatórios não são nulos
+        if (empty($_POST["nome"]) || empty($_POST["tipo"]) || empty($_POST["numero_tombo"]) || empty($_POST["setor"])) {
+            $mensagemErro = "Erro: Todos os campos obrigatórios devem ser preenchidos.";
+        } else {
+            $numero_tombo = $_POST["numero_tombo"];
+
+            // Verifica se o número de tombo já existe
+            $sql_verificar_numero_tombo = "SELECT COUNT(*) as count FROM inventario WHERE numero_tombo = ?";
+            $stmt_verificar_numero_tombo = $conn->prepare($sql_verificar_numero_tombo);
+            $stmt_verificar_numero_tombo->bind_param("s", $numero_tombo);
+            $stmt_verificar_numero_tombo->execute();
+            $stmt_verificar_numero_tombo->bind_result($count);
+            $stmt_verificar_numero_tombo->fetch();
+            $stmt_verificar_numero_tombo->close();
+
+            if ($count > 0) {
+                $mensagemErro = "Erro: Esse número de tombo já foi inserido.";
+            } else {
+                // Continua com a inserção na tabela de inventário
+                $nome_item = $_POST["nome"];
+                $tipo_item = $_POST["tipo"];
+                $setor = $_POST["setor"];
+
+                // Query SQL para inserir na tabela inventario  
+                $sql_inserir_inventario = "INSERT INTO inventario (id, nome_item, tipo_item, setor, numero_tombo) VALUES (?, ?, ?, ?, ?)";
+                $stmt_inserir_inventario = $conn->prepare($sql_inserir_inventario);
+                $stmt_inserir_inventario->bind_param("issss", $proximo_codigo_inventario, $nome_item, $tipo_item, $setor, $numero_tombo);
+
+                // Executa a consulta
+                if ($stmt_inserir_inventario->execute()) {
+                    $mensagemSucesso = "Item cadastrado com sucesso!";
+
+                    // Incluir lógica para inserção na tabela movimentacao_inventario aqui
+                    $tipo_movimentacao = "ITEM INSERIDO";
+                    $setor_origem = "Almoxarifado"; // Valor padrão, ajuste conforme necessário
+                    $setor_atual = $setor_destino = ""; // Valores iniciais, ajuste conforme necessário
+                    $data_movimentacao = date("Y-m-d H:i:s"); // Obtém a data atual no formato desejado
+
+                    $sql_inserir_movimentacao = "INSERT INTO movimentacao_inventario (numero_tombo, nome_item_inventario, tipoMovimentacao, setor_origem, setor_atual, setor_destino, data_movimentacao) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                    $stmt_inserir_movimentacao = $conn->prepare($sql_inserir_movimentacao);
+                    $stmt_inserir_movimentacao->bind_param("sssssss", $numero_tombo, $nome_item, $tipo_movimentacao, $setor_origem, $setor_atual, $setor_destino, $data_movimentacao);
+
+                    // Executa a consulta de inserção na tabela movimentacao_inventario
+                    $stmt_inserir_movimentacao->execute();
+                    $stmt_inserir_movimentacao->close();
+                } else {
+                    $mensagemErro = "Erro ao cadastrar o item: " . $stmt_inserir_inventario->error;
+                }
+                
+                // Fecha a declaração
+                $stmt_inserir_inventario->close();
+            }
+        }
+
+        // Confirma a transação
+        $conn->commit();
+
+        // Fecha a conexão
+        $conn->close();
+
+    } catch (Exception $e) {
+        // Em caso de erro, reverte a transação
+        $conn->rollback();
+        $mensagemErro = "Erro: " . $e->getMessage();
+    }
+}
+?>
+
+
+
+
+
+   
+
+ <!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Item</title>
+    <!-- Adicione aqui seus estilos CSS, se necessário -->
+</head>
+<body>
+
+<form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
+        <div class="form-group">
+            <h1>Cadastrar Item Inventário</h1>
+
+            <?php if (isset($mensagemErro)) : ?>
+                <p style="color: red;"><?php echo $mensagemErro; ?></p>
+            <?php elseif (isset($mensagemSucesso)) : ?>
+                <p style="color: green;"><?php echo $mensagemSucesso; ?></p>
+            <?php endif; ?>
+
+            <!-- Restante do seu código do formulário -->
+
+            <label for="nome">Nome do Item:</label>
+            <input type="text" name="nome" required>
+
+            <label for="tipo">Tipo do Item:</label>
+            <select name="tipo" required>
+                <option value="Material de Informática">Informática</option>
+                <option value="Eletrodoméstico">Eletrodoméstico</option>
+                <option value="Mobiliário">Mobiliário</option>
+            </select>
+
+            <label for="numero_tombo">Nº de Tombo:</label>
+            <input type="number" name="numero_tombo" required>
+
+            <label for="setor">Setor</label>
+            <select name="setor" required>
+            <option value="ALMOXARIFADO">Almoxarifado</option>
+            </select>
+
+            <button type="submit">Cadastrar Item</button>
+            <button onclick="window.location.href='cadastro_menu.html'">Voltar</button>
+            <button onclick="window.location.href='menu.php'">Sair</button>
+        </div>
+    </form>
+
+</body>
+</html>

@@ -1,0 +1,117 @@
+body {
+
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #756a6a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh; /* Alterei para min-height para evitar problemas de dimensionamento em dispositivos pequenos */
+}
+
+nav {
+    justify-content: center;
+    background-color: #b61914;
+    overflow: hidden;
+}
+
+nav a {
+    float: left;
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+nav a:hover {
+    background-color: #ddd;
+    color: black;
+    }
+
+h1 {
+    text-align: center;
+}
+
+form {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 80%; /* Alterado para 80% da largura da tela */
+    max-width: 400px; /* Adicionado max-width para evitar que o formulário se estenda demais */
+    box-sizing: border-box;
+}
+
+label {
+    font-size: 16px;
+    display: block;
+    margin-bottom: 8px;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    margin-bottom: 16px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+button {
+    background-color: #b61914;
+    color: #fff;
+    padding: 15px 30px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    transition: background-color 0.3s;
+    margin: 5px;
+}
+
+button:hover {
+    background-color: #ddd;
+    color:black;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: inline-block;
+    width: 120px;
+    margin-right: 10px;
+    text-align: right;
+}
+
+select, input {
+    width: 100%;
+}
+
+/* Adicionando regras de mídia para estilos específicos para dispositivos pequenos */
+@media screen and (max-width: 600px) {
+    form {
+        width: 100%; /* Em telas pequenas, ocupar 100% da largura */
+    }
+
+    label {
+        width: 100%; /* Labels ocupam 100% da largura para empilhamento */
+        text-align: left; /* Alinhamento à esquerda */
+        margin-bottom: 5px;
+    }
+
+    select, input {
+        width: 100%; /* Inputs ocupam 100% da largura */
+    }
+
+    button {
+        margin-top: 10px;
+    }
+}

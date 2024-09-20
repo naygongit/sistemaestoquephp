@@ -1,0 +1,86 @@
+<?php
+// Verificar se o usuário está autenticado
+session_start();
+if (!isset($_SESSION['nome_usuario'])) {
+    header('Location: index.html'); // Redirecionar para a página de login se não estiver autenticado
+    exit();
+}
+?>
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Inventário</title>
+    <link rel="stylesheet" href="gerenciar_estoque.css">
+</head>
+<body>
+    <h1>Gerenciar Inventário</h1>
+    
+    <!-- Formulário para movimentação -->
+    <form id="meu_gerenciamento" method="post" action="movimentacao_inventario.php">
+        <div id="info_inventario"></div>
+        <div id="detalhesItemContainer"></div>
+        <div id="messageContainer"></div>
+
+        <div>
+            <label for="codigoItem">Nº do Tombo:</label>
+            <input type="text" name="numero_Tombo" id="codigoItem">
+            <button type="button" onclick="exibirDetalhes()">Exibir</button>
+        </div>
+
+        <div>
+            <label for="tipoMovimentacao">Tipo de Movimentação:</label>
+            <select name="tipoMovimentacao" id="tipoMovimentacao" required>
+                <option value="Alteração de Local">Alteração de Local</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="setor_destino">Setor Destino:</label>
+            <select name="setor_destino" id="setor_destino" required>
+                <option>Departamento de Material e Patrimônio</option>
+                <option>Gabinete da Presidência</option>
+                <!-- Adicione mais opções conforme necessário -->
+            </select>
+        </div>
+
+        <button type="submit">Registrar</button>
+        <button type="button" onclick="retornarMenuPrincipal()">Sair</button>
+
+        <?php
+        // Verificar se o usuário está autenticado
+        echo "<p>Usuário: {$_SESSION['nome_usuario']}</p>";
+        ?>
+    </form>
+
+    <script>
+        function retornarMenuPrincipal() {
+            window.location.href = 'menu.php';
+        }
+
+        function exibirDetalhes() {
+            var numeroTombo = document.getElementById('codigoItem').value;
+            var xhr = new XMLHttpRequest();
+
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        // O servidor respondeu com sucesso, exibe a resposta na página
+                        document.getElementById('info_inventario').innerHTML = xhr.responseText;
+                    } else {
+                        // O servidor respondeu com um erro
+                        console.error('Erro ao enviar a requisição. Código de status:', xhr.status);
+                    }
+                }
+            };
+
+            // Configura a requisição
+            xhr.open('POST', 'buscar_inventario.php', true);
+            xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+            xhr.send('numero_Tombo=' + numeroTombo); // Corrigido para enviar 'numero_Tombo'
+        }
+    </script>
+</body>
+</html>

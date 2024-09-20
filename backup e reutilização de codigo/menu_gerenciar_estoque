@@ -1,0 +1,58 @@
+
+
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página de Inventário</title>
+    <link rel="stylesheet" href="css_index.css">
+</head>
+<body>
+
+    <h1>Gerenciamento</h1>
+
+    <div>
+        <button onclick="gerenciarEstoque()">Gerenciar Item Estoque</button>
+            
+    </div>
+
+
+
+<script>
+
+    
+        function gerenciarEstoque() {
+            // Lógica para a página de gerenciamento de inventário
+            window.location.href = 'gerenciar_estoque.php';
+        }
+
+        function gerenciarInventario() {
+            // Lógica para a página de gerenciamento de inventário
+            window.location.href = 'gerenciar_inventario.php';
+        }
+    </script>
+
+<!--<button onclick="gerenciarInventario()">Gerenciar Item Inventário</button>-->
+<button onclick="window.location.href='menu.php'">Voltar</button>
+
+<?php
+// Verificar se o usuário está autenticado
+session_start();
+if (!isset($_SESSION['nome_usuario'])) {
+    header('Location: index.html'); // Redirecionar para a página de login se não estiver autenticado
+
+    exit();
+}
+
+// Verificar se o usuário é "junior"
+$usuarionaoPermitido ="junior"; // 
+$ocultarIrParaGerenciarItem = ($_SESSION['nome_usuario'] === $usuarionaoPermitido);
+
+    // Exibir o nome do usuário
+   echo "<h2 style= text-align:center;>{$_SESSION['nome_usuario']}!</h2>";    
+?>
+
+</body>
+</html>

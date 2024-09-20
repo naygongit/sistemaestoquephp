@@ -1,0 +1,36 @@
+<?php
+// Inclui o arquivo de conexão
+include 'conexao.php';
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (isset($_POST["codigoItem"])) {
+        $codigoItem = intval($_POST["codigoItem"]);
+        
+        // Verifica se o item existe no banco de dados
+        $sqlCheckItem = "SELECT id, nome, quantidade,tipo FROM item WHERE id = $codigoItem";
+        $resultCheckItem = $conn->query($sqlCheckItem);
+        
+        if ($resultCheckItem->num_rows > 0) {
+            // Exibe os detalhes do item
+            $rowItem = $resultCheckItem->fetch_assoc();
+            echo '<h2>Detalhes do Item</h2>';
+            echo '<table border="1">';
+            echo '<tr><th>Código</th><th>Item</th><th>Quantidade</th><th>Tipo</th></tr>';
+            echo '<tr>';
+            echo '<td>' . $rowItem["id"] . '</td>';
+            echo '<td>' . $rowItem["nome"] . '</td>';
+            echo '<td>' . $rowItem["quantidade"] . '</td>';
+            echo '<td>' . $rowItem["tipo"] . '</td>';
+            // Adicione mais colunas conforme necessário
+            echo '</tr>';
+            echo '</table>';
+        } 
+        
+        else {
+            echo '<div class="alert alert-danger" role="alert">Código de item inválido.</div>';
+        }
+    } else {
+        echo '<div class="alert alert-danger" role="alert">Parâmetros inválidos.</div>';
+    }
+}
+?>

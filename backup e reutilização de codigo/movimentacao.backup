@@ -1,0 +1,80 @@
+<?php
+// Inclui o arquivo de conexão
+include 'conexao.php';
+
+// Verifica se o formulário foi enviado
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Processa o formulário e atualiza a tabela de movimentação
+
+    if (
+        isset($_POST["codigoItem"]) &&
+        isset($_POST["tipoMovimentacao"]) &&
+        isset($_POST["quantidade_item"]) &&
+        isset($_POST["funcionarioResponsavel"])
+    ) {
+        $codigoItem = intval($_POST["codigoItem"]);
+        $tipoMovimentacao = mysqli_real_escape_string($conn, $_POST["tipoMovimentacao"]);
+        $quantidade_item = intval($_POST["quantidade_item"]);
+        $funcionarioResponsavel = mysqli_real_escape_string($conn, $_POST["funcionarioResponsavel"]);
+
+        // Verifica se a quantidade de saída é válida
+        if ($tipoMovimentacao === "SAÍDA" && $quantidade_item <= 0) {
+            echo 'Quantidade inválida para saída <a href=gerenciar_estoque.html><button>Voltar</button></a>';
+            exit(); // Termina o script se a quantidade de saída for inválida
+        }
+
+        if ($tipoMovimentacao === "ENTRADA" && $quantidade_item <= 0) {
+            echo 'Quantidade inválida para entrada <a href=gerenciar_estoque.html><button>Voltar</button></a>';
+            exit(); // Termina o script se a quantidade de saída for inválida
+        }
+
+        // Inicia uma transação para garantir a consistência das operações
+        $conn->begin_transaction();
+
+        // Tenta atualizar a tabela item
+        $sqlUpdateItem = "";
+        
+        if ($tipoMovimentacao === "ENTRADA" || $tipoMovimentacao === "CADASTRO") {
+            $sqlUpdateItem = "UPDATE item SET quantidade = quantidade + $quantidade_item WHERE id = $codigoItem";
+        } 
+        elseif ($tipoMovimentacao === "SAÍDA") {
+            // Verifica se há quantidade suficiente para a saída
+            $sqlCheckQuantity = "SELECT quantidade FROM item WHERE id = $codigoItem";
+            $result = $conn->query($sqlCheckQuantity);
+            $row = $result->fetch_assoc();
+            $quantidade_disponivel = $row['quantidade'];
+
+            if ($quantidade_item > $quantidade_disponivel) {
+                $conn->rollback();
+                echo 'Quantidade insuficiente para a saída <a href=gerenciar_estoque.html><button>Voltar</button></a>';
+                exit(); // Termina o script se a quantidade disponível for insuficiente
+            }
+
+            $sqlUpdateItem = "UPDATE item SET quantidade = GREATEST(quantidade - $quantidade_item, 0) WHERE id = $codigoItem";
+        }
+
+        if ($conn->query($sqlUpdateItem) === TRUE) {
+            // Se a atualização da tabela item foi bem-sucedida, insere na tabela movimentacao
+            $sqlInsertMovimentacao = "INSERT INTO movimentacao (codigoItem, nomeItem, quantidade_item, tipoMovimentacao, funcionarioResponsavel) 
+                SELECT id, nome, $quantidade_item, '$tipoMovimentacao', '$funcionarioResponsavel' FROM item WHERE id = $codigoItem";
+
+            if ($conn->query($sqlInsertMovimentacao) === TRUE) {
+                // Se tudo ocorreu bem, commita a transação
+                $conn->commit();
+                echo 'Movimentação registrada com sucesso <a href=gerenciar_estoque.php><button>Voltar</button></a>';
+            } else {
+                // Se houve um erro na inserção da movimentação, faz rollback da transação
+                $conn->rollback();
+                echo 'Erro ao registrar a movimentação.</div>';
+            }
+        } else {
+            // Se houve um erro na atualização da tabela item, faz rollback da transação
+            $conn->rollback();
+            echo 'Erro ao atualizar a quantidade do item.</div>';
+        }
+    } else {
+        echo 'Parâmetros inválidos.</div>';
+    }
+}
+?>
+
